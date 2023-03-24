@@ -1,0 +1,12 @@
+{
+  "name": "layout-mayker",
+  "id": "1220734308103199131",
+  "api": "1.0.0",
+  "main": "code.js",
+  "capabilities": [],
+  "enableProposedApi": false,
+  "editorType": [
+    "figma"
+  ],
+  "ui": "ui.html"
+}
