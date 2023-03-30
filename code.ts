@@ -26,6 +26,9 @@ figma.ui.onmessage = (msg) => {
 
 }
 
+console.log(3333);
+
+
 function createLayout(node: SceneNode, parent = ''): string | undefined {
   let layoutProps = '';
 

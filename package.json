@@ -1,17 +1,21 @@
 {
   "name": "layout-mayker",
   "version": "1.0.0",
-  "description": "Your Figma Plugin",
+  "description": "Layout Mayker Figma plugin",
   "main": "code.js",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "watch2": "npm run build -- --watch",
-    "watch": "node ./node_modules/typescript/lib/tsc -w -p ./"
+    "build": "webpack build",
+    "watch": "webpack"
   },
   "author": "",
   "license": "",
   "devDependencies": {
     "@figma/plugin-typings": "^1.62.0",
+    "ts-loader": "^9.4.2",
     "typescript": "*"
+  },
+  "dependencies": {
+    "webpack": "^5.77.0",
+    "webpack-cli": "^5.0.1"
   }
 }
