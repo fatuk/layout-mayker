@@ -1,34 +1,7 @@
-<h2>Rectangle Creator</h2>
-<!-- <textarea id="code" cols="10" rows="3"></textarea> -->
-<pre>
-  <code id="code"></code>
-</pre>
-<p>Count: <input id="count" value="5"></p>
-<button id="create">Create</button>
-<button id="cancel">Cancel</button>
 <button id="test">Test</button>
+
 <script>
-const code = document.getElementById('code');
-
-onmessage = (event) => {
-  // console.log("got this from the plugin code", event.data.pluginMessage);
-  console.log(code);
-  code.innerText = event.data.pluginMessage;
-}
-
-
-document.getElementById('create').onclick = () => {
-  const textbox = document.getElementById('count');
-  const count = parseInt(textbox.value, 10);
-  parent.postMessage({ pluginMessage: { type: 'create-rectangles', count } }, '*')
-}
-
-document.getElementById('cancel').onclick = () => {
-  parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*')
-}
-
-document.getElementById('test').onclick = () => {
-  parent.postMessage({ pluginMessage: { type: 'test' } }, '*')
-}
-
+  document.getElementById('test').onclick = () => {
+    parent.postMessage({ pluginMessage: { type: 'test' } }, '*')
+  }
 </script>

@@ -6,101 +6,110 @@
 // full browser environment (see documentation).
 
 // This shows the HTML page in "ui.html".
-figma.showUI(__html__);
-figma.ui.resize(500, 500);
+figma.showUI(__html__, { width: 100, height: 100, title: 'Layout maker' });
 
 // Calls to "parent.postMessage" from within the HTML page will trigger this
 // callback. The callback will be passed the "pluginMessage" property of the
 // posted message.
-
-
 
 figma.ui.onmessage = (msg) => {
   if (msg.type === 'test') {
     const selection = figma.currentPage.selection[0] as FrameNode;
 
     // figma.ui.postMessage({ pluginMessage: { type: 'show-code', code: 'my code is here' } });
-    const myCode = `
-<Layout gap="8">
-  <Typography>My text</Typography>
-  <Typography>My text2</Typography>
-</Layout>
-    `;
     const testCode = createLayout(selection);
+    // prettier.format(testCode)
     // figma.ui.postMessage(testCode);
     console.log(testCode);
-    
+
   }
-  
+
 }
 
-function createLayout(node: FrameNode, parent = '') {
+function createLayout(node: SceneNode, parent = ''): string | undefined {
   let layoutProps = '';
 
   if (!node) {
     return 'Please select node';
   }
 
+  if (!node.visible) {
+    return ''
+  }
+
+  if (node.type !== 'FRAME' && node.type !== 'INSTANCE' && node.type !== 'TEXT') {
+    return '';
+  }
+
+  if (node.name === 'CUSTOM') {
+    return '[My awesome component]';
+  }
+
   if (node.name === 'Input') {
     return '[Input]';
   }
 
-  if (isLayout(node) && node.layoutMode === 'VERTICAL') {
-    layoutProps = ` isColumn`;
+  if (node.name === 'Select') {
+    return '[Select]';
+  }
+
+  if (node.name === 'Icon') {
+    return '[Icon]';
+  }
+
+  if (node.name === 'Textarea') {
+    return '[Textarea]';
+  }
+
+  if (node.name === 'Button') {
+    return '[Button]';
+  }
+
+  if (node.type === 'TEXT') {
+    return '[Typography]';
   }
 
   if (node.children) {
     const content = node.children.reduce((acc, child) => {
-
-      if (child.name === 'Input') {
-        return `${acc}\n[Input]`;
-      }
-      
-      if (isLayout(child)) {
-        if (child.layoutMode === 'VERTICAL') {
-          layoutProps = ` isColumn`;
-        }
-        
-        return `${acc}\n${createLayout(child)}`;
-      }
-
-      return `${acc}\n${child.name}\n${createLayout(child)}`;
+      return `${acc}\n${createLayout(child as FrameNode)}`;
     }, '');
 
-    const newParent = `<Layout${layoutProps}>${content}\n</Layout>`;
+    const newParent = `<Layout${getLayoutProps(node)}>${content}\n</Layout>`;
 
     return newParent;
   }
 }
 
-function isLayout(node: FrameNode) {
-  return Boolean(node.layoutMode);
-}
+function getLayoutProps(node: FrameNode | InstanceNode) {
+  let layoutProps = '';
 
-
-
-/*
-figma.ui.onmessage = msg => {
-  // One way of distinguishing between different types of messages sent from
-  // your HTML page is to use an object with a "type" property like this.
-  console.log(123);
-  
-  if (msg.type === 'create-rectangles') {
-    const nodes: SceneNode[] = [];
-    
-    for (let i = 0; i < msg.count; i++) {
-      const rect = figma.createRectangle();
-      rect.x = i * 150;
-      rect.fills = [{type: 'SOLID', color: {r: 1, g: 0.5, b: 0}}];
-      figma.currentPage.appendChild(rect);
-      nodes.push(rect);
-    }
-    figma.currentPage.selection = nodes;
-    figma.viewport.scrollAndZoomIntoView(nodes);
+  if (node.layoutMode === 'VERTICAL') {
+    layoutProps = ` isColumn`;
   }
 
-  // Make sure to close the plugin when you're done. Otherwise the plugin will
-  // keep running, which shows the cancel button at the bottom of the screen.
-  figma.closePlugin();
-};
-*/
+  if (node.itemSpacing > 0) {
+    layoutProps += ` gap="${node.itemSpacing}"`;
+  }
+
+  if (node.paddingTop > 0) {
+    layoutProps += ` paddingTop="${node.paddingTop}"`;
+  }
+
+  if (node.paddingRight > 0) {
+    layoutProps += ` paddingRight="${node.paddingRight}"`;
+  }
+
+  if (node.paddingBottom > 0) {
+    layoutProps += ` paddingBottom="${node.paddingBottom}"`;
+  }
+
+  if (node.paddingLeft > 0) {
+    layoutProps += ` paddingLeft="${node.paddingLeft}"`;
+  }
+
+  return layoutProps;
+}
+
+function isLayout(node: FrameNode | InstanceNode) {
+  return Boolean(node.layoutMode);
+}
