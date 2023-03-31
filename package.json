@@ -10,7 +10,6 @@
   "author": "",
   "license": "",
   "devDependencies": {
-    "@faker-js/faker": "^7.6.0",
     "@figma/plugin-typings": "^1.62.0",
     "@types/prettier": "^2.7.2",
     "@types/react": "^18.0.31",
