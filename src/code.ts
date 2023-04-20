@@ -52,6 +52,10 @@ function createLayout(node: SceneNode): string | undefined {
     return '[Toggle]';
   }
 
+  if (isSkeleton(node)) {
+    return '[Skeleton]';
+  }
+
   if (node.type === 'TEXT') {
     return '[Typography]';
   }
@@ -82,35 +86,23 @@ function getLayoutProps(node: FrameNode | InstanceNode) {
     layoutProps += ` gap="${node.itemSpacing}"`;
   }
 
-  if (node.paddingTop > 0) {
-    layoutProps += ` paddingTop="${node.paddingTop}"`;
-  }
-
-  if (node.paddingRight > 0) {
-    layoutProps += ` paddingRight="${node.paddingRight}"`;
-  }
-
-  if (node.paddingBottom > 0) {
-    layoutProps += ` paddingBottom="${node.paddingBottom}"`;
-  }
-
-  if (node.paddingLeft > 0) {
-    layoutProps += ` paddingLeft="${node.paddingLeft}"`;
+  if (node.paddingTop > 0 || node.paddingRight > 0 || node.paddingBottom > 0 || node.paddingLeft > 0) {
+    layoutProps += ` padding="${node.paddingTop} ${node.paddingRight} ${node.paddingBottom} ${node.paddingLeft}"`;
   }
 
   if (node.primaryAxisAlignItems === 'MIN' && node.counterAxisAlignItems === 'MIN') {
     layoutProps += ` align="top-left"`;
   }
 
-  if (node.primaryAxisAlignItems === 'MIN' && node.counterAxisAlignItems === 'CENTER') {
-    layoutProps += ` align="left-middle"`;
+  if (node.primaryAxisAlignItems === 'CENTER' && node.counterAxisAlignItems === 'MIN') {
+    layoutProps += ` align="middle-left"`;
   }
 
-  if (node.primaryAxisAlignItems === 'MIN' && node.counterAxisAlignItems === 'MAX') {
+  if (node.primaryAxisAlignItems === 'MAX' && node.counterAxisAlignItems === 'MIN') {
     layoutProps += ` align="bottom-left"`;
   }
 
-  if (node.primaryAxisAlignItems === 'CENTER' && node.counterAxisAlignItems === 'MIN') {
+  if (node.primaryAxisAlignItems === 'MIN' && node.counterAxisAlignItems === 'CENTER') {
     layoutProps += ` align="top-center"`;
   }
 
@@ -118,11 +110,15 @@ function getLayoutProps(node: FrameNode | InstanceNode) {
     layoutProps += ` align="middle-center"`;
   }
 
-  if (node.primaryAxisAlignItems === 'CENTER' && node.counterAxisAlignItems === 'MAX') {
+  if (node.primaryAxisAlignItems === 'MAX' && node.counterAxisAlignItems === 'CENTER') {
     layoutProps += ` align="bottom-center"`;
   }
 
-  if (node.primaryAxisAlignItems === 'MAX' && node.counterAxisAlignItems === 'CENTER') {
+  if (node.primaryAxisAlignItems === 'MIN' && node.counterAxisAlignItems === 'MAX') {
+    layoutProps += ` align="top-right"`;
+  }
+
+  if (node.primaryAxisAlignItems === 'CENTER' && node.counterAxisAlignItems === 'MAX') {
     layoutProps += ` align="middle-right"`;
   }
 
@@ -146,7 +142,7 @@ function isTetriaryButton(node: FrameNode | InstanceNode | TextNode) {
 }
 
 function isInput(node: FrameNode | InstanceNode | TextNode) {
-  return node.type === 'INSTANCE' && node.mainComponent?.parent?.name === 'text';
+  return node.type === 'INSTANCE' && node.mainComponent?.parent?.name === 'text field';
 }
 
 function isTextArea(node: FrameNode | InstanceNode | TextNode) {
@@ -163,4 +159,8 @@ function isToggle(node: FrameNode | InstanceNode | TextNode) {
 
 function isTypography(node: FrameNode | InstanceNode | TextNode) {
   return node.type === 'TEXT';
+}
+
+function isSkeleton(node: FrameNode | InstanceNode | TextNode) {
+  return node.type === 'INSTANCE' && node.mainComponent?.parent?.name === 'Base / Skeleton';
 }
