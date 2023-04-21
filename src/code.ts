@@ -73,10 +73,16 @@ function createLayout(node: SceneNode): string | undefined {
 
 function getLayoutProps(node: FrameNode | InstanceNode) {
   let layoutProps = '';
+  let align = '';
 
   if (node.layoutMode === 'VERTICAL') {
     layoutProps = ` isColumn`;
+    align = `${node.counterAxisAlignItems} ${node.primaryAxisAlignItems}`;
+  } else {
+    align = `${node.primaryAxisAlignItems} ${node.counterAxisAlignItems}`;
   }
+
+  console.log(`align: ${align}`);
 
   if (node.layoutGrow === 1) {
     layoutProps += ` isWide`;
@@ -90,39 +96,39 @@ function getLayoutProps(node: FrameNode | InstanceNode) {
     layoutProps += ` padding="${node.paddingTop} ${node.paddingRight} ${node.paddingBottom} ${node.paddingLeft}"`;
   }
 
-  if (node.primaryAxisAlignItems === 'MIN' && node.counterAxisAlignItems === 'MIN') {
+  if (align === 'MIN MIN') {
     layoutProps += ` align="top-left"`;
   }
 
-  if (node.primaryAxisAlignItems === 'CENTER' && node.counterAxisAlignItems === 'MIN') {
+  if (align === 'MIN CENTER') {
     layoutProps += ` align="middle-left"`;
   }
 
-  if (node.primaryAxisAlignItems === 'MAX' && node.counterAxisAlignItems === 'MIN') {
+  if (align === 'MIN MAX') {
     layoutProps += ` align="bottom-left"`;
   }
 
-  if (node.primaryAxisAlignItems === 'MIN' && node.counterAxisAlignItems === 'CENTER') {
+  if (align === 'CENTER MIN') {
     layoutProps += ` align="top-center"`;
   }
 
-  if (node.primaryAxisAlignItems === 'CENTER' && node.counterAxisAlignItems === 'CENTER') {
+  if (align === 'CENTER CENTER') {
     layoutProps += ` align="middle-center"`;
   }
 
-  if (node.primaryAxisAlignItems === 'MAX' && node.counterAxisAlignItems === 'CENTER') {
+  if (align === 'CENTER MAX') {
     layoutProps += ` align="bottom-center"`;
   }
 
-  if (node.primaryAxisAlignItems === 'MIN' && node.counterAxisAlignItems === 'MAX') {
+  if (align === 'MAX MIN') {
     layoutProps += ` align="top-right"`;
   }
 
-  if (node.primaryAxisAlignItems === 'CENTER' && node.counterAxisAlignItems === 'MAX') {
+  if (align === 'MAX CENTER') {
     layoutProps += ` align="middle-right"`;
   }
 
-  if (node.primaryAxisAlignItems === 'MAX' && node.counterAxisAlignItems === 'MAX') {
+  if (align === 'MAX MAX') {
     layoutProps += ` align="bottom-right"`;
   }
 
