@@ -1,11 +1,25 @@
 figma.showUI(__html__, { width: 500, height: 400, title: 'Layout mayker' });
 
 figma.on('selectionchange', () => {
-  const selection = figma.currentPage.selection[0] as FrameNode;
+  const selection = figma.currentPage.selection[0];
   const testCode = createLayout(selection);
 
   figma.ui.postMessage(testCode);
 });
+
+function mapComponentProps(schemeObj: {}, propsArr: {}[]) {
+  let result = '';
+
+  for (const k in schemeObj) {
+    // @ts-ignore-next-line
+    const prop = propsArr.find((_prop) => _prop.id.includes(schemeObj[k]));
+
+    // @ts-ignore-next-line
+    result += ` ${k}="${prop.value}"`;
+  }
+
+  return result;
+}
 
 function createLayout(node: SceneNode): string | undefined {
   if (!node || !node.visible) {
@@ -20,8 +34,17 @@ function createLayout(node: SceneNode): string | undefined {
     return '[My awesome component]';
   }
 
-  if (isInput(node)) {
-    return '[Input]';
+  if (isInput(node as InstanceNode)) {
+    const _node = node as InstanceNode;
+    let propsArr = Object.entries(_node.componentProperties).map(( [k, v] ) => ({ ...v, id: k }));
+    const scheme = {
+      label: 'label text',
+      placeholder: 'placeholder',
+      size: 'size',
+    };
+    const props = mapComponentProps(scheme, propsArr);
+
+    return `<Input ${props} />`;
   }
 
   if (isSelect(node)) {
@@ -135,6 +158,28 @@ function getLayoutProps(node: FrameNode | InstanceNode) {
   return layoutProps;
 }
 
+function getInputProps(node: InstanceNode) {
+  let inputProps = '';
+
+  if (node.layoutMode === 'VERTICAL') {
+    inputProps = ` isColumn`;
+  }
+
+  if (node.layoutGrow === 1) {
+    inputProps += ` isWide`;
+  }
+
+  if (node.itemSpacing > 0) {
+    inputProps += ` gap="${node.itemSpacing}"`;
+  }
+
+  if (node.paddingTop > 0 || node.paddingRight > 0 || node.paddingBottom > 0 || node.paddingLeft > 0) {
+    inputProps += ` padding="${node.paddingTop} ${node.paddingRight} ${node.paddingBottom} ${node.paddingLeft}"`;
+  }
+
+  return inputProps;
+}
+
 function isPrimaryButton(node: FrameNode | InstanceNode | TextNode) {
   return node.type === 'INSTANCE' && node.mainComponent?.parent?.name === 'primary';
 }
@@ -148,7 +193,7 @@ function isTetriaryButton(node: FrameNode | InstanceNode | TextNode) {
 }
 
 function isInput(node: FrameNode | InstanceNode | TextNode) {
-  return node.type === 'INSTANCE' && node.mainComponent?.parent?.name === 'text field';
+  return node.type === 'INSTANCE' && node.mainComponent?.parent?.name === 'input';
 }
 
 function isTextArea(node: FrameNode | InstanceNode | TextNode) {
@@ -169,4 +214,8 @@ function isTypography(node: FrameNode | InstanceNode | TextNode) {
 
 function isSkeleton(node: FrameNode | InstanceNode | TextNode) {
   return node.type === 'INSTANCE' && node.mainComponent?.parent?.name === 'Base / Skeleton';
+}
+
+function renderInput(node: InstanceNode) {
+  return `<Input${getInputProps(node)} />`;
 }
