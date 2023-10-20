@@ -7,8 +7,10 @@ figma.on('selectionchange', () => {
   figma.ui.postMessage(testCode);
 });
 
-function mapComponentProps(schemeObj: {}, propsArr: {}[]) {
+function mapComponentProps(schemeObj: {}, componentProperties: ComponentProperties) {
   let result = '';
+  // @ts-ignore-next-line
+  let propsArr = Object.entries(componentProperties).map(( [k, v] ) => ({ ...v, id: k }));
 
   for (const k in schemeObj) {
     // @ts-ignore-next-line
@@ -34,15 +36,14 @@ function createLayout(node: SceneNode): string | undefined {
     return '[My awesome component]';
   }
 
-  if (isInput(node as InstanceNode)) {
-    const _node = node as InstanceNode;
-    let propsArr = Object.entries(_node.componentProperties).map(( [k, v] ) => ({ ...v, id: k }));
+  if (isInput(node)) {
     const scheme = {
       label: 'label text',
       placeholder: 'placeholder',
       size: 'size',
     };
-    const props = mapComponentProps(scheme, propsArr);
+    // @ts-ignore-next-line
+    const props = mapComponentProps(scheme, node.componentProperties);
 
     return `<Input ${props} />`;
   }
@@ -59,16 +60,15 @@ function createLayout(node: SceneNode): string | undefined {
     return '[Textarea]';
   }
 
-  if (isPrimaryButton(node)) {
-    return '[Primary Button]';
-  }
-
-  if (isSecondaryButton(node)) {
-    return '[Secondary Button]';
-  }
-
-  if (isTetriaryButton(node)) {
-    return '[Tertiary Button]';
+  if (isButton(node)) {
+    const scheme = {
+      color: 'color',
+      variant: 'variant',
+      size: 'size',
+    };
+    const a = node;
+    const props = mapComponentProps(scheme, node.componentProperties);
+    return `<Button ${props}>Button</Button>`;
   }
 
   if (isToggle(node)) {
@@ -80,12 +80,20 @@ function createLayout(node: SceneNode): string | undefined {
   }
 
   if (node.type === 'TEXT') {
-    return '[Typography]';
+    const styleId = node.textStyleId;
+    // @ts-ignore-next-line
+    const styleName = figma.getStyleById(styleId)?.name.split('/')[1];
+    // @ts-ignore-next-line
+    const colorId = node.fills[0].boundVariables.color.id;
+    // @ts-ignore-next-line
+    const colorName = `colors-${figma.variables.getVariableById(colorId)?.name.replaceAll('/', '-')}`;
+
+    return `<Typography variant="${styleName}" color="${colorName}">${node.name}</Typography>`;
   }
 
   if (node.children) {
     const content = node.children.reduce((acc, child) => {
-      return `${acc}\n${createLayout(child as FrameNode)}`;
+      return `${acc}\n${createLayout(child)}`;
     }, '');
 
     const newParent = `<Layout${getLayoutProps(node)}>${content}\n</Layout>`;
@@ -104,8 +112,6 @@ function getLayoutProps(node: FrameNode | InstanceNode) {
   } else {
     align = `${node.primaryAxisAlignItems} ${node.counterAxisAlignItems}`;
   }
-
-  console.log(`align: ${align}`);
 
   if (node.layoutGrow === 1) {
     layoutProps += ` isWide`;
@@ -178,6 +184,16 @@ function getInputProps(node: InstanceNode) {
   }
 
   return inputProps;
+}
+
+function isButton(node: SceneNode): node is InstanceNode {
+  const sceneNode = node as InstanceNode;
+
+  return sceneNode.type === 'INSTANCE' && sceneNode.mainComponent?.parent?.name === 'button';
+}
+
+function isIconButton(node: FrameNode | InstanceNode | TextNode) {
+  return node.type === 'INSTANCE' && node.mainComponent?.parent?.name === 'icon-button';
 }
 
 function isPrimaryButton(node: FrameNode | InstanceNode | TextNode) {
