@@ -7,17 +7,19 @@ figma.on('selectionchange', () => {
   figma.ui.postMessage(testCode);
 });
 
-function mapComponentProps(schemeObj: {}, componentProperties: ComponentProperties) {
+type Scheme = {
+  [key: string]: string;
+};
+
+function mapComponentProps(schemeObj: Scheme, componentProperties: ComponentProperties) {
   let result = '';
-  // @ts-ignore-next-line
   let propsArr = Object.entries(componentProperties).map(( [k, v] ) => ({ ...v, id: k }));
 
   for (const k in schemeObj) {
-    // @ts-ignore-next-line
     const prop = propsArr.find((_prop) => _prop.id.includes(schemeObj[k]));
-
-    // @ts-ignore-next-line
-    result += ` ${k}="${prop.value}"`;
+    if (prop) {
+      result += ` ${k}="${prop.value}"`;
+    }
   }
 
   return result;
@@ -36,57 +38,67 @@ function createLayout(node: SceneNode): string | undefined {
     return '[My awesome component]';
   }
 
-  if (isInput(node)) {
-    const scheme = {
-      label: 'label text',
-      placeholder: 'placeholder',
-      size: 'size',
-    };
-    // @ts-ignore-next-line
-    const props = mapComponentProps(scheme, node.componentProperties);
-
-    return `<Input ${props} />`;
+  function isInstance(node: SceneNode): node is InstanceNode {
+    return node.type === 'INSTANCE';
   }
 
-  if (isSelect(node)) {
-    return '[Select]';
+  function isText(node: SceneNode): node is TextNode {
+    return node.type === 'TEXT';
   }
 
-  if (node.name === 'Icon') {
-    return '[Icon]';
+  if (isInstance(node)) {
+    if (is('button', node)) {
+      const scheme = {
+        color: 'color',
+        variant: 'variant',
+        size: 'size',
+      };
+      const props = mapComponentProps(scheme, node.componentProperties);
+      return `<Button ${props}>Button</Button>`;
+    }
+
+    if (is('input', node)) {
+      const scheme = {
+        label: 'label text',
+        placeholder: 'placeholder',
+        size: 'size',
+      };
+      const props = mapComponentProps(scheme, node.componentProperties);
+
+      return `<Input ${props} />`;
+    }
+
+    if (is('select', node)) {
+      return '[Select]';
+    }
+
+    if (is('icon', node)) {
+      return '[Icon]';
+    }
+
+    if (is('text area', node)) {
+      return '[Textarea]';
+    }
+
+    if (is('toggle', node)) {
+      return '[Toggle]';
+    }
+
+    if (is('Base / Skeleton', node)) {
+      return '[Skeleton]';
+    }
   }
 
-  if (isTextArea(node)) {
-    return '[Textarea]';
-  }
-
-  if (isButton(node)) {
-    const scheme = {
-      color: 'color',
-      variant: 'variant',
-      size: 'size',
-    };
-    const a = node;
-    const props = mapComponentProps(scheme, node.componentProperties);
-    return `<Button ${props}>Button</Button>`;
-  }
-
-  if (isToggle(node)) {
-    return '[Toggle]';
-  }
-
-  if (isSkeleton(node)) {
-    return '[Skeleton]';
-  }
-
-  if (node.type === 'TEXT') {
-    const styleId = node.textStyleId;
-    // @ts-ignore-next-line
+  if (isText(node)) {
+    const styleId = node.textStyleId as string;
     const styleName = figma.getStyleById(styleId)?.name.split('/')[1];
-    // @ts-ignore-next-line
-    const colorId = node.fills[0].boundVariables.color.id;
-    // @ts-ignore-next-line
-    const colorName = `colors-${figma.variables.getVariableById(colorId)?.name.replaceAll('/', '-')}`;
+    const fills = node.fills as SolidPaint[];
+    const colorId = fills[0].boundVariables?.color?.id;
+    let colorName = 'no color';
+
+    if (colorId) {
+      colorName = `colors-${figma.variables.getVariableById(colorId)?.name.replaceAll('/', '-')}`;
+    }
 
     return `<Typography variant="${styleName}" color="${colorName}">${node.name}</Typography>`;
   }
@@ -164,74 +176,6 @@ function getLayoutProps(node: FrameNode | InstanceNode) {
   return layoutProps;
 }
 
-function getInputProps(node: InstanceNode) {
-  let inputProps = '';
-
-  if (node.layoutMode === 'VERTICAL') {
-    inputProps = ` isColumn`;
-  }
-
-  if (node.layoutGrow === 1) {
-    inputProps += ` isWide`;
-  }
-
-  if (node.itemSpacing > 0) {
-    inputProps += ` gap="${node.itemSpacing}"`;
-  }
-
-  if (node.paddingTop > 0 || node.paddingRight > 0 || node.paddingBottom > 0 || node.paddingLeft > 0) {
-    inputProps += ` padding="${node.paddingTop} ${node.paddingRight} ${node.paddingBottom} ${node.paddingLeft}"`;
-  }
-
-  return inputProps;
-}
-
-function isButton(node: SceneNode): node is InstanceNode {
-  const sceneNode = node as InstanceNode;
-
-  return sceneNode.type === 'INSTANCE' && sceneNode.mainComponent?.parent?.name === 'button';
-}
-
-function isIconButton(node: FrameNode | InstanceNode | TextNode) {
-  return node.type === 'INSTANCE' && node.mainComponent?.parent?.name === 'icon-button';
-}
-
-function isPrimaryButton(node: FrameNode | InstanceNode | TextNode) {
-  return node.type === 'INSTANCE' && node.mainComponent?.parent?.name === 'primary';
-}
-
-function isSecondaryButton(node: FrameNode | InstanceNode | TextNode) {
-  return node.type === 'INSTANCE' && node.mainComponent?.parent?.name === 'secondary';
-}
-
-function isTetriaryButton(node: FrameNode | InstanceNode | TextNode) {
-  return node.type === 'INSTANCE' && node.mainComponent?.parent?.name === 'tetriary';
-}
-
-function isInput(node: FrameNode | InstanceNode | TextNode) {
-  return node.type === 'INSTANCE' && node.mainComponent?.parent?.name === 'input';
-}
-
-function isTextArea(node: FrameNode | InstanceNode | TextNode) {
-  return node.type === 'INSTANCE' && node.mainComponent?.parent?.name === 'text area';
-}
-
-function isSelect(node: FrameNode | InstanceNode | TextNode) {
-  return node.type === 'INSTANCE' && node.mainComponent?.parent?.name === 'selector';
-}
-
-function isToggle(node: FrameNode | InstanceNode | TextNode) {
-  return node.type === 'INSTANCE' && node.mainComponent?.parent?.name === 'toggle';
-}
-
-function isTypography(node: FrameNode | InstanceNode | TextNode) {
-  return node.type === 'TEXT';
-}
-
-function isSkeleton(node: FrameNode | InstanceNode | TextNode) {
-  return node.type === 'INSTANCE' && node.mainComponent?.parent?.name === 'Base / Skeleton';
-}
-
-function renderInput(node: InstanceNode) {
-  return `<Input${getInputProps(node)} />`;
+function is(componentName: string, node: InstanceNode){
+  return node.mainComponent?.parent?.name === componentName;
 }
