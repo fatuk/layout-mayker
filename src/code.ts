@@ -34,18 +34,6 @@ function createLayout(node: SceneNode): string | undefined {
     return '';
   }
 
-  if (node.name === 'CUSTOM') {
-    return '[My awesome component]';
-  }
-
-  function isInstance(node: SceneNode): node is InstanceNode {
-    return node.type === 'INSTANCE';
-  }
-
-  function isText(node: SceneNode): node is TextNode {
-    return node.type === 'TEXT';
-  }
-
   if (isInstance(node)) {
     if (is('button', node)) {
       const scheme = {
@@ -81,7 +69,16 @@ function createLayout(node: SceneNode): string | undefined {
     }
 
     if (is('toggle', node)) {
-      return '[Toggle]';
+      const scheme = {
+        isChecked: 'On / Off',
+        label: 'placeholder',
+      };
+      const props = mapComponentProps(scheme, node.componentProperties);
+
+      console.log(node);
+
+
+      return `<Toggle ${props} />`;
     }
 
     if (is('Base / Skeleton', node)) {
@@ -174,6 +171,14 @@ function getLayoutProps(node: FrameNode | InstanceNode) {
   }
 
   return layoutProps;
+}
+
+function isInstance(node: SceneNode): node is InstanceNode {
+  return node.type === 'INSTANCE';
+}
+
+function isText(node: SceneNode): node is TextNode {
+  return node.type === 'TEXT';
 }
 
 function is(componentName: string, node: InstanceNode){
